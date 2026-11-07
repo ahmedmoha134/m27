@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>صندوق التخمين · لعبة الألغاز</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#7c3aed; --purple2:#a855f7; --orange:#f97316; --green:#22c55e;
+  --pink:#ec4899; --blue:#0ea5e9; --ink:#2b1a4a; --red:#ef4444;
+  --yellow:#fbbf24; --shadow:0 10px 24px rgba(76,29,149,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Baloo Bhaijaan 2","Segoe UI",Tahoma,sans-serif;
+  color:var(--ink); min-height:100vh; overflow-x:hidden;
+  background:
+    radial-gradient(900px 500px at 90% -10%, #fce7f3 0%, transparent 60%),
+    radial-gradient(800px 500px at 0% 0%, #dbeafe 0%, transparent 55%),
+    radial-gradient(700px 400px at 50% 100%, #fef3c7 0%, transparent 55%),
+    linear-gradient(180deg,#fff7ed 0%, #eef2ff 100%);
+}
+body::before,body::after{
+  content:""; position:fixed; border-radius:50%; filter:blur(2px); opacity:.35; z-index:0; pointer-events:none;
+  animation:float 9s ease-in-out infinite;
+}
+body::before{width:180px;height:180px;background:#fde68a;top:12%;left:-60px}
+body::after{width:140px;height:140px;background:#bbf7d0;bottom:8%;right:-40px;animation-delay:2s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-26px)}}
+#fx{position:fixed;inset:0;z-index:60;pointer-events:none}
+.app{position:relative;z-index:2;max-width:960px;margin:0 auto;padding:10px 12px 40px}
+
+/* ======= الشريط العلوي ======= */
+.topbar{display:flex;align-items:center;gap:8px;justify-content:space-between;
+  background:rgba(255,255,255,.78);backdrop-filter:blur(8px);
+  border:3px solid #fff;border-radius:22px;padding:8px 10px;box-shadow:var(--shadow);margin-bottom:14px}
+.brand{font-size:clamp(16px,4.2vw,24px);margin:0;font-weight:800;color:var(--purple);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.brand .box{display:inline-grid;place-items:center;width:1.35em;height:1.35em;background:linear-gradient(145deg,var(--yellow),var(--orange));
+  color:#fff;border-radius:12px;transform:rotate(-8deg);box-shadow:0 4px 0 #b45309;font-size:.85em}
+.icon-btn{border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:15px;color:#fff;
+  background:linear-gradient(145deg,var(--purple2),var(--purple));padding:9px 13px;border-radius:14px;
+  box-shadow:0 4px 0 #5b21b6;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #5b21b6}
+.icon-btn.ghost{background:linear-gradient(145deg,#38bdf8,#0284c7);box-shadow:0 4px 0 #075985}
+.top-actions{display:flex;gap:6px}
+.hidden{display:none !important}
+
+/* ======= الشاشات ======= */
+.screen{display:none;animation:pop .35s ease}
+.screen.active{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{background:rgba(255,255,255,.92);border:4px solid #fff;border-radius:26px;padding:16px;box-shadow:var(--shadow)}
+.hero{text-align:center;margin:6px 0 14px}
+.hero-emoji{font-size:72px;line-height:1;width:120px;height:120px;margin:0 auto 6px;
+  display:grid;place-items:center;border-radius:34px;background:linear-gradient(145deg,var(--yellow),var(--orange));
+  box-shadow:0 10px 0 #b45309, var(--shadow);animation:tilt 3s ease-in-out infinite}
+@keyframes tilt{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) scale(1.04)}}
+.hero h2{margin:6px 0 2px;font-size:28px;color:var(--purple)}
+.hero p{margin:0;font-size:15.5px;opacity:.85}
+
+.opt{margin-bottom:14px}
+.opt-label{font-weight:700;font-size:17px;display:block;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;border:3px solid #e9d5ff;background:#fff;color:#6b21a8;
+  padding:9px 14px;border-radius:16px;transition:.15s}
+.chip:hover{transform:translateY(-2px)}
+.chip.active{background:linear-gradient(145deg,var(--purple2),var(--purple));color:#fff;border-color:transparent;box-shadow:0 5px 0 #5b21b6}
+.switches{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 16px}
+.sw{display:flex;align-items:center;gap:7px;background:#f5f3ff;border:2px dashed #c4b5fd;border-radius:14px;padding:8px 12px;font-weight:600;cursor:pointer}
+.sw input{width:20px;height:20px;accent-color:var(--purple);cursor:pointer}
+.btn{font-family:inherit;font-weight:800;cursor:pointer;border:0;border-radius:18px;padding:13px 20px;font-size:17px;color:#fff;transition:.15s}
+.btn-primary{background:linear-gradient(145deg,#34d399,#059669);box-shadow:0 6px 0 #047857;width:100%}
+.btn-primary:active{transform:translateY(4px);box-shadow:0 2px 0 #047857}
+.btn.big{font-size:22px;padding:16px}
+.btn-soft{background:linear-gradient(145deg,#fbbf24,#f59e0b);box-shadow:0 5px 0 #b45309;color:#4a2600}
+.btn-soft:active{transform:translateY(3px);box-shadow:0 2px 0 #b45309}
+.btn-pink{background:linear-gradient(145deg,#f472b6,#db2777);box-shadow:0 5px 0 #9d174d}
+.btn-gray{background:linear-gradient(145deg,#94a3b8,#64748b);box-shadow:0 5px 0 #475569}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.best{text-align:center;margin-top:12px;font-weight:700;color:#7c3aed;background:#faf5ff;border-radius:14px;padding:8px}
+.howto{margin-top:14px;background:#fffbeb;border:3px dashed #fcd34d;border-radius:22px;padding:14px 18px;font-size:15.5px;line-height:1.9}
+.howto b{color:var(--orange)}
+
+/* ======= لوحة اللعب ======= */
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.stat{background:#fff;border:3px solid #fff;box-shadow:var(--shadow);border-radius:18px;padding:7px 4px;text-align:center}
+.stat span{display:block;font-size:12.5px;opacity:.7;font-weight:600}
+.stat b{font-size:19px;color:var(--purple)}
+.stat b.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.35);color:var(--orange)}}
+.progress{height:14px;background:#e9d5ff;border-radius:99px;overflow:hidden;border:3px solid #fff;box-shadow:var(--shadow);margin-bottom:10px}
+.progress i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--green),#a3e635);transition:width .4s}
+.msg{text-align:center;font-weight:700;font-size:17px;min-height:34px;margin:10px 0;color:var(--purple)}
+.msg.good{color:#15803d}.msg.bad{color:#b91c1c}
+.round-indicator{text-align:center;font-weight:700;color:var(--purple);margin-bottom:8px;font-size:15px}
+
+/* صندوق التخمين */
+.chest-wrap{max-width:520px;margin:0 auto 14px;position:relative}
+.chest{background:linear-gradient(145deg,#fef3c7,#fde68a);border:5px solid #fff;border-radius:26px;
+  box-shadow:var(--shadow);padding:18px;min-height:220px;position:relative;overflow:hidden}
+.chest::before{content:"🎁";position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:56px;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));animation:wiggle 2s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:translateX(-50%) rotate(-5deg)}50%{transform:translateX(-50%) rotate(5deg)}}
+.chest-title{text-align:center;font-weight:800;font-size:20px;color:var(--orange);margin:26px 0 12px}
+
+/* بطاقات التلميحات */
+.hints{display:flex;flex-direction:column;gap:8px;min-height:120px}
+.hint-card{background:#fff;border:3px solid #fed7aa;border-radius:16px;padding:10px 14px;
+  display:flex;align-items:center;gap:10px;animation:slideIn .5s cubic-bezier(.3,1.4,.5,1);box-shadow:0 3px 0 #fdba74}
+.hint-card .icon{font-size:32px;flex-shrink:0}
+.hint-card .text{font-weight:700;font-size:16px;color:var(--ink);flex:1}
+.hint-card .num{background:var(--orange);color:#fff;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;font-weight:800;font-size:14px;flex-shrink:0}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px) scale(.9)}to{opacity:1;transform:none}}
+.hint-card.speak{cursor:pointer;transition:.15s}
+.hint-card.speak:hover{transform:translateY(-2px);border-color:var(--purple)}
+.hint-card.speak:active{transform:scale(.97)}
+
+/* عداد التلميحات */
+.hint-counter{text-align:center;margin-top:10px;font-weight:700;color:var(--purple);font-size:14px}
+.hint-counter b{color:var(--orange);font-size:18px}
+
+/* الخيارات */
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:520px;margin:0 auto}
+.choice{font-family:inherit;font-weight:800;font-size:clamp(16px,4.5vw,22px);cursor:pointer;border:4px solid #e9d5ff;
+  background:#fff;color:var(--ink);padding:14px 8px;border-radius:20px;box-shadow:0 5px 0 #ddd6fe;transition:.15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px}
+.choice .emo{font-size:clamp(30px,8vw,46px);line-height:1}
+.choice:hover:not(:disabled){transform:translateY(-3px);border-color:var(--purple)}
+.choice:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #ddd6fe}
+.choice.correct{background:linear-gradient(145deg,#86efac,#22c55e);border-color:#15803d;color:#fff;box-shadow:0 5px 0 #15803d;animation:ok .5s}
+.choice.wrong{background:linear-gradient(145deg,#fca5a5,#ef4444);border-color:#b91c1c;color:#fff;box-shadow:0 5px 0 #b91c1c;animation:shake .45s}
+.choice.reveal{background:linear-gradient(145deg,#fde68a,#fbbf24);border-color:#b45309;color:#4a2600;box-shadow:0 5px 0 #b45309}
+.choice:disabled{cursor:default}
+@keyframes ok{0%{transform:scale(1)}45%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.game-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+
+/* الإجابة المكشوفة */
+.reveal-box{max-width:520px;margin:14px auto 0;background:linear-gradient(145deg,#fef3c7,#fde68a);
+  border:4px solid #fff;border-radius:22px;padding:16px;text-align:center;box-shadow:var(--shadow);animation:pop .5s}
+.reveal-box .big-emoji{font-size:80px;line-height:1;margin-bottom:6px}
+.reveal-box .word{font-size:28px;font-weight:800;color:var(--orange);margin-bottom:4px}
+.reveal-box .fact{font-size:15px;font-weight:600;color:var(--ink);opacity:.85}
+
+/* ======= النوافذ ======= */
+.modal{position:fixed;inset:0;background:rgba(43,26,74,.55);backdrop-filter:blur(4px);display:none;place-items:center;z-index:70;padding:16px}
+.modal.open{display:grid;animation:pop .25s}
+.modal-card{background:#fff;border-radius:28px;border:5px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.3);
+  padding:22px;max-width:460px;width:100%;text-align:center;max-height:88vh;overflow:auto}
+.modal-card h2{margin:0 0 6px;color:var(--purple);font-size:27px}
+.stars{font-size:46px;letter-spacing:6px;margin:6px 0}
+.stars span{display:inline-block;opacity:.25;transform:scale(.6)}
+.stars span.on{opacity:1;animation:starpop .5s forwards}
+@keyframes starpop{0%{transform:scale(0) rotate(-90deg)}70%{transform:scale(1.35)}100%{transform:scale(1) rotate(0)}}
+.res{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.res div{background:#f5f3ff;border-radius:14px;padding:8px;font-weight:700}
+.res div b{display:block;color:var(--purple);font-size:20px}
+.modal-actions{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.words-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.wbtn{font-family:inherit;cursor:pointer;background:#fff7ed;border:3px solid #fed7aa;border-radius:16px;padding:8px 4px;font-weight:700}
+.wbtn span{display:block;font-size:30px}
+.wbtn:active{transform:scale(.95)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;
+  padding:11px 20px;border-radius:16px;font-weight:700;z-index:90;transition:.35s;max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:520px){
+  .hud{grid-template-columns:repeat(2,1fr)}
+  .hero-emoji{width:96px;height:96px;font-size:58px}
+  .chest{padding:14px}
+}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<div class="app">
+  <header class="topbar">
+    <button id="btnHome" class="icon-btn hidden">🏠 <span>الرئيسية</span></button>
+    <h1 class="brand">صندوق التخمين <span class="box">🎁</span></h1>
+    <div class="top-actions">
+      <button id="btnWords" class="icon-btn ghost" title="كل الألغاز">📚</button>
+      <button id="btnSound" class="icon-btn" title="الصوت">🔊</button>
+    </div>
+  </header>
+
+  <!-- ================= الرئيسية ================= -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <div class="hero-emoji">🎁</div>
+      <h2>ما الذي في صندوق التخمين؟</h2>
+      <p>اقرأ التلميحات واحداً تلو الآخر… ثم خمّن الإجابة! 🕵️</p>
+    </div>
+
+    <div class="panel">
+      <div class="opt">
+        <span class="opt-label">🎚️ اختر المستوى</span>
+        <div class="chips" id="levelChips">
+          <button class="chip active" data-level="easy">سهل · تلميحات واضحة</button>
+          <button class="chip" data-level="medium">متوسط · تلميحات ذكية</button>
+          <button class="chip" data-level="hard">صعب · تلميحات غامضة</button>
+        </div>
+      </div>
+      <div class="opt">
+        <span class="opt-label">🎯 عدد الألغاز</span>
+        <div class="chips" id="roundChips">
+          <button class="chip active" data-rounds="3">٣ ألغاز</button>
+          <button class="chip" data-rounds="5">٥ ألغاز</button>
+          <button class="chip" data-rounds="8">٨ ألغاز</button>
+        </div>
+      </div>
+      <div class="switches">
+        <label class="sw"><input type="checkbox" id="optSound" checked><span>🔊 المؤثرات الصوتية</span></label>
+        <label class="sw"><input type="checkbox" id="optSpeech" checked><span>🗣️ نطق التلميحات</span></label>
+        <label class="sw"><input type="checkbox" id="optAuto" checked><span>⏭️ كشف تلقائي بعد ٨ ثوانٍ</span></label>
+      </div>
+      <button id="btnStart" class="btn btn-primary big">▶ ابدأ اللعب</button>
+      <div class="best" id="bestBox">🏆 أفضل نتيجة: —</div>
+    </div>
+
+    <div class="howto">
+      <b>كيف ألعب؟</b><br>
+      ١) يظهر صندوق التخمين 🎁 مع التلميح الأول.<br>
+      ٢) اضغط على التلميح لسماعه 🔊، ثم خمّن الإجابة من الخيارات.<br>
+      ٣) إذا لم تكن متأكداً، اضغط «➕ تلميح جديد» لكشف تلميح آخر.<br>
+      ٤) كلما خمّنت <b>بأقل عدد من التلميحات</b> ← حصلت على <b>نقاط أكثر</b> ⭐<br>
+      ٥) بعد انتهاء الألغاز، يفتح <b>تحدي حرف التاء</b> للتحقق من إجاباتك! 🎯
+    </div>
+  </section>
+
+  <!-- ================= اللعب ================= -->
+  <section id="screen-game" class="screen">
+    <div class="hud">
+      <div class="stat"><span>🎯 اللغز</span><b id="hudRound">1/3</b></div>
+      <div class="stat"><span>💡 التلميحات</span><b id="hudHints">1/4</b></div>
+      <div class="stat"><span>❌ الأخطاء</span><b id="hudWrong">0</b></div>
+      <div class="stat"><span>⭐ النقاط</span><b id="hudScore">0</b></div>
+    </div>
+    <div class="progress"><i id="progFill"></i></div>
+    <div class="round-indicator" id="roundInfo">اللغز ١ — اقرأ التلميح ثم خمّن!</div>
+    <div class="msg" id="msg" aria-live="polite">ما الذي في الصندوق؟ 🔍</div>
+
+    <div class="chest-wrap">
+      <div class="chest">
+        <div class="chest-title">🎁 صندوق التخمين</div>
+        <div class="hints" id="hints"></div>
+        <div class="hint-counter">التلميح <b id="hintNum">1</b> من <b id="hintTotal">4</b></div>
+      </div>
+    </div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="game-actions">
+      <button id="btnNextHint" class="btn btn-soft">➕ تلميح جديد</button>
+      <button id="btnSkip" class="btn btn-pink">⏭️ تجاوز</button>
+      <button id="btnRestart" class="btn btn-gray">🔁 إعادة</button>
+    </div>
+
+    <div id="revealBox"></div>
+  </section>
+</div>
+
+<!-- النوافذ -->
+<div class="modal" id="modalWin"><div class="modal-card" id="winCard"></div></div>
+
+<div class="modal" id="modalWords"><div class="modal-card">
+  <h2>📚 كل الألغاز</h2>
+  <p style="margin:0;font-weight:600">اضغط على أي لغز لتسمع تلميحاته 🔊</p>
+  <div class="words-grid" id="wordsGrid"></div>
+  <div class="modal-actions"><button class="btn btn-gray" data-close>إغلاق</button></div>
+</div></div>
+
+<div class="modal" id="modalExit"><div class="modal-card">
+  <h2>🏠 العودة للرئيسية؟</h2>
+  <p style="font-weight:600">سيتم إنهاء الجولة الحالية وفقدان تقدّمك.</p>
+  <div class="modal-actions">
+    <button class="btn btn-pink" id="confirmExit">نعم، عُد للرئيسية</button>
+    <button class="btn btn-gray" data-close>لا، أكمل اللعب</button>
+  </div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   1) البيانات: الألغاز الكاملة
+   ========================================================= */
+const PUZZLES = [
+  {
+    answer:{w:'تِمساح', s:'تمساح', e:'🐊'},
+    hints:[
+      {icon:'🐾', text:'أنا حيوان'},
+      {icon:'🌊', text:'أعيش قرب الماء'},
+      {icon:'🦷', text:'لديّ أسنان حادة'},
+      {icon:'🟢', text:'لوني أخضر وجسمي طويل'}
+    ],
+    fact:'التمساح من الزواحف الكبيرة التي تعيش في الأنهار والبحيرات 🐊'
+  },
+  {
+    answer:{w:'تُفّاحة', s:'تفاحة', e:'🍎'},
+    hints:[
+      {icon:'🍎', text:'أنا فاكهة لذيذة'},
+      {icon:'🌳', text:'أنمو على الأشجار'},
+      {icon:'🎨', text:'ألواني: أحمر، أخضر، أو أصفر'},
+      {icon:'🍏', text:'طعمي حلو ومقرمش'}
+    ],
+    fact:'التفاحة فاكهة صحية مليئة بالفيتامينات 🍎'
+  },
+  {
+    answer:{w:'تاج', s:'تاج', e:'👑'},
+    hints:[
+      {icon:'👑', text:'يلبسوني على الرأس'},
+      {icon:'🤴', text:'أرمز للملوك والملكات'},
+      {icon:'💎', text:'أُزيَّن بالأحجار الكريمة'},
+      {icon:'✨', text:'غالباً ما أكون من الذهب'}
+    ],
+    fact:'التاج رمز الملكية والسلطة 👑'
+  },
+  {
+    answer:{w:'تِلِفون', s:'تلفون', e:'📞'},
+    hints:[
+      {icon:'📱', text:'جهاز نستخدمه يومياً'},
+      {icon:'🗣️', text:'نتكلم مع الأصدقاء عبري'},
+      {icon:'🔔', text:'أصدر رنيناً عند الاتصال'},
+      {icon:'📲', text:'لديّ شاشة وأزرار'}
+    ],
+    fact:'الهاتف اختراع رائع يربط الناس ببعضهم 📞'
+  },
+  {
+    answer:{w:'توت', s:'توت', e:'🫐'},
+    hints:[
+      {icon:'🍇', text:'فاكهة صغيرة الحجم'},
+      {icon:'🌿', text:'تنمو على الشجيرات'},
+      {icon:'🔵', text:'ألواني: أزرق، أحمر، أو أسود'},
+      {icon:'🍰', text:'أُستخدم في صنع المربى والحلويات'}
+    ],
+    fact:'التوت فاكهة لذيذة وغنية بمضادات الأكسدة 🫐'
+  },
+  {
+    answer:{w:'تاكسي', s:'تاكسي', e:'🚕'},
+    hints:[
+      {icon:'🚗', text:'سيارة خاصة'},
+      {icon:'💰', text:'أدفع نقوداً لأركبها'},
+      {icon:'🟡', text:'غالباً ما أكون أصفر اللون'},
+      {icon:'🏙️', text:'أعمل في المدن لنقل الركاب'}
+    ],
+    fact:'التاكسي وسيلة نقل سريعة في المدن 🚕'
+  },
+  {
+    answer:{w:'تِنّين', s:'تنين', e:'🐉'},
+    hints:[
+      {icon:'🦖', text:'مخلوق خيالي كبير'},
+      {icon:'🔥', text:'أخرج النار من فمي'},
+      {icon:'🪽', text:'لديّ أجنحة وأطير'},
+      {icon:'📖', text:'أظهر في القصص والحكايات'}
+    ],
+    fact:'التنين مخلوق أسطوري في قصص الأطفال 🐉'
+  },
+  {
+    answer:{w:'تِلِسكوب', s:'تلسكوب', e:'🔭'},
+    hints:[
+      {icon:'🔭', text:'أداة علمية'},
+      {icon:'🌙', text:'أنظر بها إلى النجوم والقمر'},
+      {icon:'🔬', text:'أُستخدم في علم الفلك'},
+      {icon:'👁️', text:'أُكبِّر الأشياء البعيدة'}
+    ],
+    fact:'التلسكوب يساعدنا على رؤية النجوم والكواكب 🔭'
+  },
+  {
+    answer:{w:'تِرمومتر', s:'ترمومتر', e:'🌡️'},
+    hints:[
+      {icon:'🌡️', text:'أداة لقياس شيء'},
+      {icon:'🤒', text:'نستخدمه عند المرض'},
+      {icon:'📏', text:'أقيس به درجة الحرارة'},
+      {icon:'🔴', text:'فيه زئبق أو سائل أحمر يرتفع'}
+    ],
+    fact:'الترمومتر يقيس درجة حرارة الجسم والطقس 🌡️'
+  },
+  {
+    answer:{w:'تَذكِرة', s:'تذكرة', e:'🎫'},
+    hints:[
+      {icon:'🎫', text:'قطعة صغيرة من الورق'},
+      {icon:'🎬', text:'أحتاجها لدخول السينما'},
+      {icon:'✈️', text:'أو للسفر بالطائرة'},
+      {icon:'💳', text:'أدفع ثمنها قبل الحدث'}
+    ],
+    fact:'التذكرة تسمح لنا بدخول الأماكن المدفوعة 🎫'
+  }
+];
+const LEVELS = {
+  easy:{hintsShown:2,points:[100,70,50,30]},
+  medium:{hintsShown:1,points:[120,80,55,35]},
+  hard:{hintsShown:1,points:[150,100,60,40]}
+};
+
+/* =========================================================
+   2) محرك الصوت (Web Audio API)
+   ========================================================= */
+const Sfx = (()=>{
+  let ctx=null, on=true;
+  function ready(){
+    if(!on) return null;
+    if(!ctx){ try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;} }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone({f=440,to=null,d=.15,type='sine',v=.18,delay=0}){
+    const c=ready(); if(!c) return;
+    const t0=c.currentTime+delay, o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t0);
+    if(to) o.frequency.exponentialRampToValueAtTime(Math.max(40,to),t0+d);
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(v,t0+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+d);
+    o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+d+.05);
+  }
+  return {
+    setOn(v){on=v; if(!v&&window.speechSynthesis) speechSynthesis.cancel();},
+    isOn(){return on;},
+    unlock(){ready();},
+    click(){tone({f:520,to:760,d:.08,type:'triangle',v:.14});},
+    hint(){tone({f:600,to:1300,d:.28,type:'sine',v:.12});
+           tone({f:900,to:1400,d:.2,type:'triangle',v:.08,delay:.1});},
+    correct(){[523,659,784,1047].forEach((f,i)=>tone({f,d:.22,type:'sine',v:.17,delay:i*.085}));
+              tone({f:1568,d:.3,type:'triangle',v:.08,delay:.34});},
+    wrong(){tone({f:250,to:170,d:.20,type:'triangle',v:.14});
+            tone({f:190,to:120,d:.24,type:'sine',v:.11,delay:.13});},
+    reveal(){tone({f:400,to:800,d:.25,type:'sine',v:.14});},
+    star(){tone({f:1200,to:1900,d:.18,type:'triangle',v:.12});},
+    win(){[[523,0],[659,.13],[784,.26],[1047,.39],[880,.55],[1047,.68],[1319,.82]]
+          .forEach(([f,d])=>tone({f,d:.3,type:'sine',v:.18,delay:d}));
+          [261,392].forEach((f,i)=>tone({f,d:.9,type:'triangle',v:.07,delay:i*.4}));},
+    lose(){[440,392,330,262].forEach((f,i)=>tone({f,d:.25,type:'sine',v:.13,delay:i*.14}));}
+  };
+})();
+
+/* نطق الكلمات بالعربية */
+let voices=[];
+function loadVoices(){ if(window.speechSynthesis) voices=speechSynthesis.getVoices()||[]; }
+loadVoices(); if(window.speechSynthesis) speechSynthesis.onvoiceschanged=loadVoices;
+function speak(text){
+  if(!Sfx.isOn() || !S.optSpeech.checked || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ar-SA'; u.rate=.85; u.pitch=1.15;
+    const v=voices.find(v=>/^ar/i.test(v.lang)); if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* =========================================================
+   3) مؤثرات بصرية (قصاصات ملوّنة)
+   ========================================================= */
+const FX=(()=>{
+  const cv=document.getElementById('fx'), ctx=cv.getContext('2d');
+  let ps=[], raf=null, W=0,H=0,dpr=1;
+  const COLORS=['#f97316','#22c55e','#7c3aed','#ec4899','#0ea5e9','#facc15'];
+  function resize(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.width=innerWidth*dpr;H=cv.height=innerHeight*dpr;
+    cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';}
+  addEventListener('resize',resize); resize();
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    ps=ps.filter(p=>p.life>0 && p.y<H+80);
+    for(const p of ps){
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life--;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha=Math.max(0,Math.min(1,p.life/28)); ctx.fillStyle=p.c;
+      if(p.round){ctx.beginPath();ctx.arc(0,0,p.s/2,0,7);ctx.fill();}
+      else ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);
+      ctx.restore();
+    }
+    if(ps.length) raf=requestAnimationFrame(loop); else {raf=null;ctx.clearRect(0,0,W,H);}
+  }
+  function push(p){ps.push(p); if(!raf) raf=requestAnimationFrame(loop);}
+  return {
+    burst(x,y,n=26){ for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=(2+Math.random()*6)*dpr;
+      push({x:x*dpr,y:y*dpr,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2*dpr,g:.22*dpr,s:(6+Math.random()*8)*dpr,
+        c:COLORS[(Math.random()*COLORS.length)|0],rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:60+Math.random()*25,round:Math.random()<.4});}},
+    rain(n=110){ for(let i=0;i<n;i++){ push({x:Math.random()*W,y:-Math.random()*H*.5,vx:(Math.random()-.5)*2*dpr,
+      vy:(2+Math.random()*3)*dpr,g:.05*dpr,s:(7+Math.random()*10)*dpr,c:COLORS[(Math.random()*COLORS.length)|0],
+      rot:Math.random()*6,vr:(Math.random()-.5)*.3,life:170+Math.random()*70,round:Math.random()<.3});}}
+  };
+})();
+
+/* =========================================================
+   4) الحالة العامة + أدوات
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const S={level:'easy',rounds:3,deck:[],current:null,hintIdx:0,choices:[],
+         score:0,roundIdx:0,wrongInRound:0,running:false,locked:false,
+         optSpeech:$('optSpeech'),optSound:$('optSound'),optAuto:$('optAuto')};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+function toast(t,ms=1900){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ms);}
+function openModal(id){$(id).classList.add('open');}
+function closeModal(id){$(id).classList.remove('open');}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  $('btnHome').classList.toggle('hidden', id==='screen-home');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+
+/* التخزين المحلي */
+const KEY='guess_box_best_v1';
+const readBest=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}};
+const saveBest=o=>{try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
+function refreshBest(){
+  const b=readBest()[S.level+'_'+S.rounds];
+  $('bestBox').textContent = b ? `🏆 أفضل نتيجة: ${b.score} نقطة · ${'⭐'.repeat(b.stars)}` : '🏆 أفضل نتيجة: — (العب لتسجّل رقماً!)';
+}
+
+/* =========================================================
+   5) بناء الجولة
+   ========================================================= */
+function buildDeck(){
+  S.deck=shuffle([...PUZZLES]).slice(0,S.rounds);
+  // إذا كان العدد أقل، نكرر
+  while(S.deck.length<S.rounds){
+    S.deck.push(...shuffle([...PUZZLES]).slice(0,S.rounds-S.deck.length));
+  }
+  S.deck=S.deck.slice(0,S.rounds);
+}
+
+function buildChoices(){
+  const pool=shuffle(PUZZLES.filter(p=>p.answer.s!==S.current.answer.s));
+  const wrong=pool.slice(0,3).map(p=>p.answer);
+  return shuffle([S.current.answer,...wrong]);
+}
+
+function startGame(){
+  Sfx.unlock(); Sfx.click();
+  Object.assign(S,{score:0,roundIdx:0,running:true});
+  buildDeck();
+  showScreen('screen-game');
+  startRound();
+}
+
+function startRound(){
+  S.current=S.deck[S.roundIdx];
+  S.choices=buildChoices();
+  S.hintIdx=0;
+  S.wrongInRound=0;
+  S.locked=false;
+  $('hints').innerHTML='';
+  $('revealBox').innerHTML='';
+  renderChoices();
+  updateHUD();
+  setMsg(`اللغز ${S.roundIdx+1} من ${S.rounds} — اقرأ التلميح! 🔍`);
+  $('roundInfo').textContent=`اللغز ${S.roundIdx+1} — اقرأ التلميح ثم خمّن!`;
+  $('progFill').style.width=(S.roundIdx/S.rounds*100)+'%';
+  $('btnNextHint').disabled=false;
+  
+  // عرض التلميح الأول تلقائياً
+  setTimeout(()=>addHint(),400);
+}
+
+function addHint(){
+  if(S.hintIdx>=S.current.hints.length) return;
+  const h=S.current.hints[S.hintIdx];
+  const card=document.createElement('div');
+  card.className='hint-card speak';
+  card.innerHTML=`<span class="num">${S.hintIdx+1}</span><span class="icon">${h.icon}</span><span class="text">${h.text}</span>`;
+  card.addEventListener('click',()=>{
+    Sfx.click();
+    speak(h.text);
+  });
+  $('hints').appendChild(card);
+  Sfx.hint();
+  speak(h.text);
+  S.hintIdx++;
+  updateHUD();
+  $('hintNum').textContent=S.hintIdx;
+  $('hintTotal').textContent=S.current.hints.length;
+  
+  if(S.hintIdx>=S.current.hints.length){
+    $('btnNextHint').disabled=true;
+    setMsg('هذه كل التلميحات! خمّن الآن 🎯');
+  }else{
+    setMsg('هل عرفت الإجابة؟ أو اضغط «➕ تلميح جديد»');
+  }
+}
+
+function renderChoices(){
+  const c=$('choices');
+  c.innerHTML='';
+  S.choices.forEach((w,i)=>{
+    const b=document.createElement('button');
+    b.className='choice';
+    b.type='button';
+    b.innerHTML=`<span class="emo">${w.e}</span><span>${w.w}</span>`;
+    b.addEventListener('click',()=>chooseAnswer(i,b));
+    c.appendChild(b);
+  });
+}
+
+function chooseAnswer(i,btn){
+  if(S.locked) return;
+  S.locked=true;
+  const chosen=S.choices[i];
+  const isCorrect=chosen.s===S.current.answer.s;
+
+  if(isCorrect){
+    Sfx.correct();
+    btn.classList.add('correct');
+    const points=LEVELS[S.level].points[Math.min(S.hintIdx-1,3)];
+    S.score+=points;
+    updateHUD();
+    const r=btn.getBoundingClientRect();
+    FX.burst(r.left+r.width/2,r.top+r.height/2,35);
+    speak(S.current.answer.s);
+    setMsg(`🎉 إجابة صحيحة! ${S.current.answer.e} ${S.current.answer.w} — +${points} نقطة`,'good');
+    bump($('hudScore'));
+    showReveal();
+    setTimeout(nextRound,2800);
+  }else{
+    Sfx.wrong();
+    btn.classList.add('wrong');
+    btn.disabled=true;
+    S.wrongInRound++;
+    updateHUD();
+    setMsg(`❌ ${chosen.e} ${chosen.w} ليست الإجابة الصحيحة… حاول مرة أخرى!`,'bad');
+    setTimeout(()=>{S.locked=false;},600);
+  }
+}
+
+function showReveal(){
+  const rb=$('revealBox');
+  rb.innerHTML=`
+    <div class="reveal-box">
+      <div class="big-emoji">${S.current.answer.e}</div>
+      <div class="word">${S.current.answer.w}</div>
+      <div class="fact">${S.current.fact}</div>
+    </div>`;
+  Sfx.reveal();
+}
+
+function nextRound(){
+  S.roundIdx++;
+  if(S.roundIdx>=S.rounds){
+    finishGame();
+  }else{
+    startRound();
+  }
+}
+
+function updateHUD(){
+  $('hudRound').textContent=`${S.roundIdx+1}/${S.rounds}`;
+  $('hudHints').textContent=`${S.hintIdx}/${S.current.hints.length}`;
+  $('hudWrong').textContent=S.wrongInRound;
+  $('hudScore').textContent=S.score;
+}
+
+function setMsg(t,cls=''){const m=$('msg');m.className='msg '+cls;m.textContent=t;}
+
+/* أزرار اللعبة */
+$('btnNextHint').addEventListener('click',()=>{
+  if(S.locked || S.hintIdx>=S.current.hints.length) return;
+  Sfx.click();
+  addHint();
+});
+$('btnSkip').addEventListener('click',()=>{
+  if(S.locked) return;
+  Sfx.click();
+  S.score=Math.max(0,S.score-15);
+  updateHUD();
+  setMsg(`⏭️ تم تجاوز اللغز — ${S.current.answer.e} ${S.current.answer.w}`);
+  speak(S.current.answer.s);
+  showReveal();
+  // كشف الإجابة الصحيحة
+  [...$('choices').children].forEach((b,i)=>{
+    if(S.choices[i].s===S.current.answer.s) b.classList.add('reveal');
+  });
+  S.locked=true;
+  setTimeout(nextRound,2500);
+});
+$('btnRestart').addEventListener('click',()=>{Sfx.click();startGame();});
+
+/* =========================================================
+   6) نهاية اللعبة + النتائج
+   ========================================================= */
+function starsFor(score,rounds){
+  const max=rounds*150;
+  const pct=score/max;
+  return pct>=.85?3:pct>=.55?2:1;
+}
+function finishGame(){
+  S.running=false;
+  const stars=starsFor(S.score,S.rounds);
+  Sfx.win(); FX.rain(130);
+  const key=S.level+'_'+S.rounds, all=readBest(), prev=all[key];
+  const isRecord=!prev||S.score>prev.score;
+  if(isRecord){ all[key]={score:S.score,stars}; saveBest(all); }
+  refreshBest();
+
+  $('winCard').innerHTML=`
+    <h2>🎉 أكملت جميع الألغاز!</h2>
+    <div class="stars" id="starsBox"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <p style="font-weight:700;margin:2px 0">${isRecord?'🏆 رقم قياسي جديد!':'عمل رائع، واصل التقدّم!'}</p>
+    <div class="res">
+      <div>النقاط<b>${S.score}</b></div>
+      <div>الألغاز<b>${S.rounds}</b></div>
+      <div>المستوى<b>${S.level==='easy'?'سهل':S.level==='medium'?'متوسط':'صعب'}</b></div>
+      <div>النجوم<b>${'⭐'.repeat(stars)}</b></div>
+    </div>
+    <p style="font-weight:700">🎯 هل أنت جاهز لتحدي حرف التاء؟</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="goBonus">🎯 تحدي حرف التاء</button>
+      <button class="btn btn-soft" id="againBtn">🔁 العب مرة أخرى</button>
+      <button class="btn btn-gray" id="homeBtn2">🏠 الرئيسية</button>
+    </div>`;
+  openModal('modalWin');
+  [...$('starsBox').children].forEach((s,i)=>{ if(i<stars) setTimeout(()=>{s.classList.add('on');Sfx.star();},350+i*380); });
+  $('goBonus').onclick=()=>{closeModal('modalWin');startBonus();};
+  $('againBtn').onclick=()=>{closeModal('modalWin');startGame();};
+  $('homeBtn2').onclick=()=>{closeModal('modalWin');goHome();};
+}
+
+/* =========================================================
+   7) تحدي حرف التاء
+   ========================================================= */
+const B={rounds:[],idx:0,sel:new Set(),checked:false,score:0,correct:0,total:0};
+const WORDS_TAA = [
+  {w:'تُفّاحة', s:'تفاحة', e:'🍎', t:true},
+  {w:'تاج',     s:'تاج',    e:'👑', t:true},
+  {w:'تِمساح',  s:'تمساح',  e:'🐊', t:true},
+  {w:'تِنّين',  s:'تنين',   e:'🐉', t:true},
+  {w:'توت',     s:'توت',    e:'🫐', t:true},
+  {w:'تاكسي',   s:'تاكسي',  e:'🚕', t:true},
+  {w:'تِلِفون', s:'تلفون',  e:'📞', t:true},
+  {w:'تِرس',    s:'ترس',    e:'⚙️', t:true},
+  {w:'تِلِسكوب',s:'تلسكوب', e:'🔭', t:true},
+  {w:'تَذكِرة', s:'تذكرة',  e:'🎫', t:true},
+  {w:'تِرمومتر',s:'ترمومتر',e:'🌡️', t:true}
+];
+const WORDS_OTHER = [
+  {w:'أسد',s:'أسد',e:'🦁'},{w:'بقرة',s:'بقرة',e:'🐄'},{w:'جَزرة',s:'جزرة',e:'🥕'},
+  {w:'دُبّ',s:'دب',e:'🐻'},{w:'سمكة',s:'سمكة',e:'🐟'},{w:'عِنَب',s:'عنب',e:'🍇'},
+  {w:'فيل',s:'فيل',e:'🐘'},{w:'قمر',s:'قمر',e:'🌙'},{w:'نجمة',s:'نجمة',e:'⭐'},
+  {w:'وردة',s:'وردة',e:'🌹'},{w:'كتاب',s:'كتاب',e:'📖'},{w:'موز',s:'موز',e:'🍌'}
+];
+function startBonus(){
+  Sfx.click();
+  B.rounds=[0,1].map(()=>shuffle([...shuffle([...WORDS_TAA]).slice(0,3),...shuffle([...WORDS_OTHER]).slice(0,3)]));
+  B.idx=0; B.score=0; B.correct=0; B.total=0;
+  showScreen('screen-game');
+  renderBonusUI();
+}
+function renderBonusUI(){
+  document.querySelector('.hud').style.display='none';
+  document.querySelector('.progress').style.display='none';
+  document.querySelector('.chest-wrap').style.display='none';
+  document.querySelector('.choices').style.display='none';
+  document.querySelector('.game-actions').style.display='none';
+  document.querySelector('.round-indicator').style.display='none';
+  document.getElementById('revealBox').style.display='none';
+
+  let bc=document.getElementById('bonusContainer');
+  if(!bc){
+    bc=document.createElement('div');
+    bc.id='bonusContainer';
+    bc.innerHTML=`
+      <div class="panel">
+        <h2 style="text-align:center;color:var(--purple);margin:0">🎯 تحدي حرف التاء</h2>
+        <p id="bonusQ" style="text-align:center;font-weight:700;margin:6px 0"></p>
+        <div class="choices" id="bonusGrid" style="max-width:520px;margin:14px auto"></div>
+        <div class="msg" id="bonusMsg" aria-live="polite"></div>
+        <button id="btnBonusCheck" class="btn btn-primary" style="max-width:400px;margin:10px auto;display:block">✔ تحقّق من الإجابة</button>
+      </div>`;
+    $('screen-game').appendChild(bc);
+    $('btnBonusCheck').addEventListener('click',onBonusCheck);
+  }
+  bc.style.display='block';
+  B.sel=new Set(); B.checked=false;
+  $('bonusMsg').textContent=''; $('bonusMsg').className='msg';
+  $('bonusQ').textContent=`الجولة ${B.idx+1} من ${B.rounds.length} — اختر كل الصور التي تبدأ كلماتها بحرف «ت»`;
+  $('btnBonusCheck').textContent='✔ تحقّق من الإجابة';
+  const g=$('bonusGrid'); g.innerHTML='';
+  B.rounds[B.idx].forEach((w,i)=>{
+    const b=document.createElement('button');
+    b.className='choice';
+    b.type='button';
+    b.innerHTML=`<span class="emo">${w.e}</span><span>${w.w}</span>`;
+    b.onclick=()=>{
+      if(B.checked) return;
+      Sfx.click();
+      if(B.sel.has(i)){B.sel.delete(i);b.classList.remove('correct');}else{B.sel.add(i);b.classList.add('correct');}
+    };
+    g.appendChild(b);
+  });
+}
+function onBonusCheck(){
+  if(!B.checked){
+    if(B.sel.size===0){ toast('اختر صورة واحدة على الأقل 🙂'); Sfx.wrong(); return; }
+    B.checked=true;
+    let right=0,wrong=0,missed=0;
+    [...$('bonusGrid').children].forEach((el,i)=>{
+      const isT=!!B.rounds[B.idx][i].t, picked=B.sel.has(i);
+      el.classList.remove('correct');
+      if(isT) B.total++;
+      if(picked&&isT){el.classList.add('correct');right++;B.correct++;}
+      else if(picked&&!isT){el.classList.add('wrong');wrong++;}
+      else if(!picked&&isT){el.style.borderStyle='dashed';el.style.borderColor='#f59e0b';missed++;}
+    });
+    const gained=Math.max(0,right*10-wrong*5); B.score+=gained;
+    const perfect = wrong===0&&missed===0;
+    $('bonusMsg').className='msg '+(perfect?'good':'bad');
+    $('bonusMsg').textContent = perfect
+      ? `🌟 إجابات صحيحة بالكامل! +${gained} نقطة`
+      : `أحسنت المحاولة! صحيحة: ${right} · خاطئة: ${wrong} · فاتتك: ${missed} → +${gained} نقطة`;
+    perfect?(Sfx.correct(),FX.rain(60)):Sfx.wrong();
+    speak(perfect?'أحسنت، إجابة صحيحة':'حاول مرة أخرى');
+    $('btnBonusCheck').textContent = B.idx<B.rounds.length-1 ? '➡ الجولة التالية' : '🏁 عرض النتيجة';
+  }else{
+    if(B.idx<B.rounds.length-1){B.idx++;Sfx.click();renderBonusUI();}
+    else finishBonus();
+  }
+}
+function finishBonus(){
+  const pct=Math.round(B.correct/Math.max(1,B.total)*100);
+  const stars=pct>=90?3:pct>=60?2:1;
+  pct>=60?(Sfx.win(),FX.rain(110)):Sfx.lose();
+  $('winCard').innerHTML=`
+    <h2>🎯 نتيجة تحدي التاء</h2>
+    <div class="stars" id="starsBox"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div class="res">
+      <div>إجابات صحيحة<b>${B.correct}/${B.total}</b></div>
+      <div>الدقّة<b>${pct}%</b></div>
+      <div>نقاط التحدي<b>${B.score}</b></div>
+      <div>نقاط اللعبة<b>${S.score}</b></div>
+    </div>
+    <p style="font-weight:700">${pct>=90?'مذهل! أنت خبير حرف التاء 🏅':pct>=60?'جيد جداً! راجع الألغاز لتصبح خبيراً 💪':'لا بأس! جرّب المستوى السهل وتدرّب 📚'}</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="againBtn">🔁 جولة جديدة</button>
+      <button class="btn btn-soft" id="wordsBtn2">📚 راجع الألغاز</button>
+      <button class="btn btn-gray" id="homeBtn2">🏠 الرئيسية</button>
+    </div>`;
+  openModal('modalWin');
+  [...$('starsBox').children].forEach((s,i)=>{if(i<stars)setTimeout(()=>{s.classList.add('on');Sfx.star();},300+i*350);});
+  $('againBtn').onclick=()=>{closeModal('modalWin');resetBonusUI();startGame();};
+  $('wordsBtn2').onclick=()=>{closeModal('modalWin');openModal('modalWords');};
+  $('homeBtn2').onclick=()=>{closeModal('modalWin');resetBonusUI();goHome();};
+}
+function resetBonusUI(){
+  document.querySelector('.hud').style.display='';
+  document.querySelector('.progress').style.display='';
+  document.querySelector('.chest-wrap').style.display='';
+  document.querySelector('.choices').style.display='';
+  document.querySelector('.game-actions').style.display='';
+  document.querySelector('.round-indicator').style.display='';
+  document.getElementById('revealBox').style.display='';
+  const bc=document.getElementById('bonusContainer');
+  if(bc) bc.style.display='none';
+}
+
+/* =========================================================
+   8) التنقّل والأزرار العامة
+   ========================================================= */
+function goHome(){
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  refreshBest(); resetBonusUI(); showScreen('screen-home');
+}
+$('btnHome').addEventListener('click',()=>{
+  Sfx.click();
+  if($('screen-game').classList.contains('active') && S.running) openModal('modalExit');
+  else goHome();
+});
+$('confirmExit').addEventListener('click',()=>{closeModal('modalExit');Sfx.click();goHome();});
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',e=>{
+  Sfx.click(); closeModal(e.target.closest('.modal').id);
+}));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));});
+
+$('levelChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));b.classList.add('active');
+  S.level=b.dataset.level;Sfx.click();refreshBest();});
+$('roundChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));b.classList.add('active');
+  S.rounds=+b.dataset.rounds;Sfx.click();refreshBest();});
+
+$('btnStart').addEventListener('click',startGame);
+$('btnSound').addEventListener('click',()=>{
+  const on=!Sfx.isOn(); Sfx.setOn(on); $('optSound').checked=on;
+  $('btnSound').textContent=on?'🔊':'🔇'; if(on){Sfx.unlock();Sfx.click();}
+  toast(on?'🔊 الصوت مفعّل':'🔇 الصوت مكتوم');
+});
+$('optSound').addEventListener('change',e=>{Sfx.setOn(e.target.checked);$('btnSound').textContent=e.target.checked?'🔊':'🔇';if(e.target.checked){Sfx.unlock();Sfx.click();}});
+$('btnWords').addEventListener('click',()=>{Sfx.unlock();Sfx.click();openModal('modalWords');});
+
+/* قاموس الألغاز */
+$('wordsGrid').innerHTML=PUZZLES.map((p,i)=>`<button class="wbtn" data-w="${i}"><span>${p.answer.e}</span>${p.answer.w}</button>`).join('');
+$('wordsGrid').addEventListener('click',e=>{const b=e.target.closest('.wbtn');if(!b)return;
+  const p=PUZZLES[+b.dataset.w]; Sfx.hint(); speak(p.hints.map(h=>h.text).join(' . '));});
+
+/* فتح الصوت عند أول لمسة */
+['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>Sfx.unlock(),{once:true}));
+refreshBest();
+</script>
+</body>
+</html>
